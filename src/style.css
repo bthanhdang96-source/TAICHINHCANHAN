@@ -675,8 +675,8 @@ body {
   }
 }
 
-/* --- Recent Transactions Panel --- */
-.transaction-panel {
+/* --- Recent Transactions & TCBS Panels --- */
+.transaction-panel, .tcbs-panel {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
@@ -684,10 +684,10 @@ body {
   box-shadow: var(--shadow-md);
   animation: fadeSlideUp 0.5s var(--ease-spring) 0.5s both;
   grid-column: 1 / -1;
-  margin-top: -1rem;
+  margin-top: 1rem;
 }
 
-.transaction-panel__title {
+.transaction-panel__title, .tcbs-panel__title {
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--text-tertiary);
@@ -699,13 +699,13 @@ body {
   align-items: center;
 }
 
-.transaction-list {
+.transaction-list, .stock-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.transaction-item {
+.transaction-item, .stock-item {
   display: grid;
   grid-template-columns: 40px 1fr auto;
   gap: 1rem;
@@ -715,8 +715,20 @@ body {
   transition: background var(--duration-fast) var(--ease-spring);
 }
 
-.transaction-item:hover {
+.transaction-item:hover, .stock-item:hover {
   background: var(--bg-surface-hover);
+}
+
+.stock-item__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--accent);
+  color: var(--bg-root);
 }
 
 .transaction-item__icon {

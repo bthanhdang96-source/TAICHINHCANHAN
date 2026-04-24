@@ -9,6 +9,11 @@ export default defineConfig({
         target: 'https://userapi.sepay.vn/v2',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/sepay/, '')
+      },
+      '/api/tcbs': {
+        target: 'https://openapi.tcbs.com.vn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/tcbs/, '')
       }
     }
   },

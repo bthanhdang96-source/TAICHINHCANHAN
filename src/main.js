@@ -7,6 +7,7 @@ import { icons } from './lib/icons.js';
 import { drawDonut, drawSparkline, drawTrendChart } from './lib/charts.js';
 import { ASSETS, TREND_DATA, STATS } from './data/demo.js';
 import { fetchVPBankAccountBalance, fetchVPBankTransactions } from './lib/sepay.js';
+import { fetchTCBSAssets } from './lib/tcbs.js';
 
 // --- State ---
 const hiddenAssets = new Set();
@@ -14,6 +15,9 @@ let allHidden = false;
 let activeTrendTab = '1M';
 let vpbankTransactions = [];
 let isLoadingSepay = true;
+let tcbsAssets = [];
+let tcbsTotalValue = 0;
+let isLoadingTcbs = false;
 
 // --- Helpers ---
 function formatVND(n) {
@@ -246,6 +250,50 @@ function renderTransactionPanel() {
   `;
 }
 
+function renderTCBSPanel() {
+  if (isLoadingTcbs) {
+    return `
+      <div class="tcbs-panel">
+        <div class="tcbs-panel__title">Danh muc Co phieu TCBS</div>
+        <div class="transaction-empty">
+          <div class="spinner"></div>
+          <div style="margin-top: 1rem;">Dang xac thuc va lay du lieu TCBS...</div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="tcbs-panel">
+      <div class="tcbs-panel__title">
+        <span>Danh muc Co phieu TCBS</span>
+        <button class="btn-toggle" style="font-size:0.75rem; padding:0.25rem 0.75rem; border-radius:1rem; border:1px solid var(--border-default); background:var(--bg-surface-hover);" title="Dong bo TCBS" id="btn-refresh-tcbs">
+          Đồng bộ TCBS
+        </button>
+      </div>
+      
+      ${tcbsAssets.length === 0 ? `
+        <div class="transaction-empty">Chua co du lieu hoac ban khong cam ma co phieu nao.</div>
+      ` : `
+        <div class="stock-list">
+          ${tcbsAssets.map(stock => `
+            <div class="stock-item">
+              <div class="stock-item__icon">${stock.symbol.substring(0, 2)}</div>
+              <div class="transaction-item__details">
+                <div class="transaction-item__content">${stock.symbol}</div>
+                <div class="transaction-item__date">So luong: ${formatVND(stock.quantity)} | Gia: ${formatVND(stock.price)}</div>
+              </div>
+              <div class="transaction-item__amount">
+                ${formatVND(stock.value)}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `}
+    </div>
+  `;
+}
+
 function now() {
   return new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 }
@@ -273,6 +321,7 @@ function render() {
       </section>
 
       ${renderTransactionPanel()}
+      ${renderTCBSPanel()}
     </div>
   `;
 
@@ -341,6 +390,11 @@ function bindEvents() {
   document.getElementById('btn-refresh-sepay')?.addEventListener('click', () => {
     loadSepayData();
   });
+
+  // Refresh TCBS
+  document.getElementById('btn-refresh-tcbs')?.addEventListener('click', () => {
+    loadTCBSData();
+  });
 }
 
 // --- Resize handler ---
@@ -365,6 +419,25 @@ async function loadSepayData() {
   
   vpbankTransactions = await fetchVPBankTransactions(5);
   isLoadingSepay = false;
+  render();
+}
+
+async function loadTCBSData() {
+  isLoadingTcbs = true;
+  render(); // show loading state
+
+  const tcbsResult = await fetchTCBSAssets();
+  tcbsAssets = tcbsResult.items || [];
+  tcbsTotalValue = tcbsResult.totalValue || 0;
+
+  if (tcbsTotalValue > 0) {
+    const stockAsset = ASSETS.find(a => a.id === 'stock');
+    if (stockAsset) {
+      stockAsset.value = tcbsTotalValue;
+    }
+  }
+
+  isLoadingTcbs = false;
   render();
 }
 
