@@ -18,6 +18,7 @@ let isLoadingSepay = true;
 let tcbsAssets = [];
 let tcbsTotalValue = 0;
 let isLoadingTcbs = false;
+let tcbsError = '';
 
 // --- Helpers ---
 function formatVND(n) {
@@ -272,7 +273,9 @@ function renderTCBSPanel() {
         </button>
       </div>
       
-      ${tcbsAssets.length === 0 ? `
+      ${tcbsError ? `
+        <div class="panel-error">${tcbsError}</div>
+      ` : tcbsAssets.length === 0 ? `
         <div class="transaction-empty">Chua co du lieu hoac ban khong cam ma co phieu nao.</div>
       ` : `
         <div class="stock-list">
@@ -425,13 +428,22 @@ async function loadSepayData() {
 async function loadTCBSData() {
   const otp = window.prompt("Hệ thống TCBS yêu cầu xác thực bảo mật.\nVui lòng mở app TCInvest (SmartOTP) và nhập 6 số iOTP vào đây:");
   if (!otp) return; // Nguoi dung an Cancel
+
+  const sanitizedOtp = otp.trim();
+  if (!/^\d{6}$/.test(sanitizedOtp)) {
+    tcbsError = 'OTP TCBS phai gom dung 6 chu so.';
+    render();
+    return;
+  }
   
   isLoadingTcbs = true;
+  tcbsError = '';
   render(); // show loading state
 
-  const tcbsResult = await fetchTCBSAssets(otp);
+  const tcbsResult = await fetchTCBSAssets(sanitizedOtp);
   tcbsAssets = tcbsResult.items || [];
   tcbsTotalValue = tcbsResult.totalValue || 0;
+  tcbsError = tcbsResult.error || '';
 
   if (tcbsTotalValue > 0) {
     const stockAsset = ASSETS.find(a => a.id === 'stock');

@@ -9,13 +9,108 @@ const TCBS_API_URL = '/api/tcbs';
  * Get TCBS Config from environment variables.
  */
 function getConfig() {
-  const apiKey = import.meta.env.VITE_TCBS_API_KEY;
-  const accountNo = import.meta.env.VITE_TCBS_ACCOUNT_NO;
-  
+  const apiKey = sanitizeEnvValue(import.meta.env.VITE_TCBS_API_KEY);
+  const accountNo = sanitizeEnvValue(import.meta.env.VITE_TCBS_ACCOUNT_NO);
+
   if (!apiKey || !accountNo) {
     console.warn('VITE_TCBS_API_KEY hoac VITE_TCBS_ACCOUNT_NO thieu trong file .env');
   }
+
   return { apiKey, accountNo };
+}
+
+function sanitizeEnvValue(value) {
+  if (typeof value !== 'string') return '';
+
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
+
+async function parseResponseBody(response) {
+  const contentType = response.headers.get('content-type') || '';
+
+  try {
+    if (contentType.includes('application/json')) {
+      return await response.json();
+    }
+
+    const text = await response.text();
+    return text ? { message: text } : null;
+  } catch {
+    return null;
+  }
+}
+
+function buildErrorDetails(payload) {
+  if (!payload) return '';
+  if (typeof payload === 'string') return payload;
+
+  return [payload.code, payload.message, payload.error, payload.error_description]
+    .filter(Boolean)
+    .join(' - ');
+}
+
+function stringifyPayload(payload) {
+  if (!payload || typeof payload === 'string') return '';
+
+  try {
+    return JSON.stringify(payload);
+  } catch {
+    return '';
+  }
+}
+
+function joinMessageParts(parts) {
+  return parts.filter(Boolean).join(' ');
+}
+
+function createTCBSError(step, response, payload, fallbackMessage) {
+  const error = new Error(fallbackMessage);
+  error.name = 'TCBSError';
+  error.step = step;
+  error.status = response?.status ?? null;
+  error.payload = payload;
+  error.details = buildErrorDetails(payload);
+  return error;
+}
+
+function getUserFacingError(error) {
+  if (error?.name !== 'TCBSError') {
+    return 'Khong the ket noi toi TCBS luc nay. Vui long thu lai sau.';
+  }
+
+  const statusText = error.status ? `HTTP ${error.status}.` : '';
+  const detailsText = error.details ? `Chi tiet tu TCBS: ${error.details}.` : '';
+  const rawPayloadText = !detailsText && error.payload
+    ? `Payload: ${stringifyPayload(error.payload)}.`
+    : '';
+
+  if (error.step === 'token_exchange') {
+    return joinMessageParts([
+      'TCBS tu choi doi token.',
+      statusText,
+      detailsText || rawPayloadText,
+      'Kiem tra lai API Key trong .env, OTP vua nhap, va dam bao API Key nay da duoc kich hoat Open API trong TCInvest.'
+    ]);
+  }
+
+  if (error.step === 'asset_fetch') {
+    return joinMessageParts([
+      'Da lay token nhung TCBS tu choi truy van tai san.',
+      statusText,
+      detailsText || rawPayloadText,
+      'Kiem tra lai tieu khoan trong .env co khop voi API Key va quyen truy cap hay khong.'
+    ]);
+  }
+
+  return error.message || 'Khong the lay du lieu TCBS.';
 }
 
 /**
@@ -23,88 +118,113 @@ function getConfig() {
  * Thuc te, TCBS yeu cau call /gaia/v1/oauth2/openapi/token de doi API Key lay JWT Token.
  */
 async function getValidToken(apiKey, otp) {
-  // Neu apiKey da la JWT token (thuong bat dau bang ey), tra ve luon
   if (apiKey.startsWith('ey')) {
     return apiKey;
   }
-  
-  // Neu chi la API Key, thu exchange lay JWT (Day la Payload du doan, co the can update theo tai lieu TCBS)
-  try {
-    const res = await fetch(`${TCBS_API_URL}/gaia/v1/oauth2/openapi/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ apiKey, otp }) // Payload theo chuan cua TCBS
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.accessToken || data.token) {
-        return data.accessToken || data.token;
-      }
-    }
-  } catch (e) {
-    console.error('Loi khi exchange token TCBS:', e);
+
+  const sanitizedOtp = sanitizeEnvValue(otp);
+  if (!sanitizedOtp) {
+    throw new Error('OTP la bat buoc de doi TCBS access token.');
   }
-  
-  // Fallback: van dung apiKey de gui
-  return apiKey;
+
+  const response = await fetch(`${TCBS_API_URL}/gaia/v1/oauth2/openapi/token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ apiKey, otp: sanitizedOtp })
+  });
+
+  const payload = await parseResponseBody(response);
+  if (!response.ok) {
+    throw createTCBSError(
+      'token_exchange',
+      response,
+      payload,
+      `Khong the doi TCBS token (${response.status}).`
+    );
+  }
+
+  if (payload?.accessToken || payload?.token) {
+    return payload.accessToken || payload.token;
+  }
+
+  throw createTCBSError(
+    'token_exchange',
+    response,
+    payload,
+    'TCBS khong tra ve access token hop le.'
+  );
 }
 
 /**
  * Fetch TCBS Stock Assets (Tra cuu tai san co phieu)
- * @returns {Promise<{totalValue: number, items: Array}>}
+ * @returns {Promise<{totalValue: number, items: Array, error: string | null}>}
  */
 export async function fetchTCBSAssets(otp) {
   const { apiKey, accountNo } = getConfig();
-  if (!apiKey || !accountNo) return { totalValue: 0, items: [] };
-
-  const token = await getValidToken(apiKey, otp);
+  if (!apiKey || !accountNo) {
+    return {
+      totalValue: 0,
+      items: [],
+      error: 'Thieu VITE_TCBS_API_KEY hoac VITE_TCBS_ACCOUNT_NO trong file .env.'
+    };
+  }
 
   try {
+    const token = await getValidToken(apiKey, otp);
     const response = await fetch(`${TCBS_API_URL}/aion/v1/accounts/${accountNo}/se`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${token}`
       }
     });
 
-    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-    
-    const json = await response.json();
-    console.log("TCBS Assets Data:", json); // Log de kiem tra cau truc data
-    
-    // Parse data tuy vao cau truc SeInfoDTO cua TCBS
-    // Gia su tra ve json.data la mang hoac chua mang
+    const json = await parseResponseBody(response);
+    if (!response.ok) {
+      throw createTCBSError(
+        'asset_fetch',
+        response,
+        json,
+        `Khong the lay tai san TCBS (${response.status}).`
+      );
+    }
+
+    console.log('TCBS Assets Data:', json);
+
     const itemsData = json.data?.list || json.data || json || [];
     const items = Array.isArray(itemsData) ? itemsData : [];
-    
-    // Tinh tong gia tri thi truong (Gia su field la marketValue, totalValue hoac currentPrice * quantity)
+
     let totalValue = 0;
-    const parsedItems = items.map(item => {
-      // Du doan cac field cua TCBS
+    const parsedItems = items.map((item) => {
       const symbol = item.symbol || item.stockCode || 'UNK';
       const quantity = item.totalVolume || item.quantity || item.volume || 0;
       const price = item.marketPrice || item.currentPrice || item.price || 0;
-      const val = item.marketValue || item.totalValue || (quantity * price) || 0;
-      
-      totalValue += val;
-      
+      const value = item.marketValue || item.totalValue || (quantity * price) || 0;
+
+      totalValue += value;
+
       return {
         symbol,
         quantity,
         price,
-        value: val
+        value
       };
-    }).filter(i => i.value > 0);
+    }).filter((item) => item.value > 0);
 
     return {
       totalValue,
-      items: parsedItems
+      items: parsedItems,
+      error: null
     };
   } catch (error) {
-    console.error('Failed to fetch TCBS assets:', error);
-    return { totalValue: 0, items: [] };
+    const details = error?.details ? ` | ${error.details}` : '';
+    console.error(`Failed to fetch TCBS assets [${error?.step || 'unknown'}]:`, error, details);
+
+    return {
+      totalValue: 0,
+      items: [],
+      error: getUserFacingError(error)
+    };
   }
 }

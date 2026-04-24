@@ -790,6 +790,16 @@ body {
   font-size: 0.85rem;
 }
 
+.panel-error {
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  border-radius: var(--radius-md);
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
 .spinner {
   display: inline-block;
   width: 20px;
