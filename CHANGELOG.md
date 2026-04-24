@@ -5,6 +5,12 @@ Mỗi khi có tính năng mới hoặc lỗi được sửa, AI (hoặc bạn) s
 
 ---
 
+## [2026-04-24] - Thêm Taste Skill (Design System)
+- Tích hợp bộ quy tắc thiết kế UI premium từ [taste-skill](https://github.com/Leonxlnx/taste-skill).
+- AI sẽ tự động tuân theo các quy tắc chống giao diện "nhạt nhẽo" (anti-slop): cấm font Inter, cấm emoji, cấm layout generic 3 cột đều nhau.
+- Có 3 thông số điều chỉnh phong cách: DESIGN_VARIANCE (bố cục), MOTION_INTENSITY (hiệu ứng), VISUAL_DENSITY (mật độ nội dung).
+- File skill nằm tại `skills/taste-skill/SKILL.md`.
+
 ## [2026-04-24] - Tích hợp Beads
 - Cài đặt hệ thống quản lý task Beads (bd CLI v1.0.2) để tối ưu quy trình AI.
 - Cập nhật cấu trúc dự án: thêm `.gitignore` hoàn chỉnh, `AGENTS.md`, `CLAUDE.md`.

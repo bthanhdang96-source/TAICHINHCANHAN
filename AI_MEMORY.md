@@ -6,6 +6,13 @@ File này lưu trữ các quyết định kiến trúc lớn. Để quản lý t
 
 ---
 
+## [2026-04-24] - Tích hợp Taste Skill (Design System cho AI)
+- **SKILL MỚI:** Đã thêm `skills/taste-skill/SKILL.md` — bộ quy tắc thiết kế premium chống AI "slop".
+- **Nguồn gốc:** Dựa trên [taste-skill](https://github.com/Leonxlnx/taste-skill) (12.4k stars), đã customized cho Vanilla JS + CSS stack (gốc hỗ trợ React/Tailwind).
+- **3 thông số điều chỉnh:** DESIGN_VARIANCE=8, MOTION_INTENSITY=6, VISUAL_DENSITY=4. User có thể yêu cầu thay đổi qua chat.
+- **Quy tắc bắt buộc:** AI PHẢI đọc `skills/taste-skill/SKILL.md` trước khi viết bất kỳ CSS/HTML nào. Xem `CONTEXT.md` mục 3.
+- **Anti-Slop Blacklist:** Cấm Inter font, cấm emoji, cấm pure black (#000), cấm neon glow, cấm 3-column card layout generic, cấm centered hero (khi DESIGN_VARIANCE > 4).
+
 ## [2026-04-24] - Tích hợp Beads (Bộ nhớ AI nâng cấp)
 - **CHUYỂN ĐỔI LỚN:** Task tracking từ nay được quản lý bằng Beads (`bd` commands) thay vì ghi tay vào file.
 - **Cài đặt:** `bd` CLI v1.0.2 đã được cài đặt tại `C:\Users\DTGK\AppData\Local\Programs\bd\bd.exe`.

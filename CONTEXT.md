@@ -17,6 +17,7 @@ Quy tắc tối thượng: Giữ mọi thứ đơn giản, tốc độ cao, modu
 - `src/components/`: Chứa các Component UI độc lập (dạng JS Class hoặc Hàm trả về DOM/String template).
 - `src/pages/`: Chứa các layout/view chính cho từng màn hình.
 - `supabase/schema.sql`: Nơi tham khảo cấu trúc bảng DB để viết truy vấn. **Không cần query vào DB để tìm hiểu cấu trúc, chỉ cần đọc file này**.
+- `skills/taste-skill/SKILL.md`: **[QUAN TRỌNG]** File chứa toàn bộ quy tắc thiết kế UI premium (Typography, Color, Layout, Animation, Anti-Slop). AI bắt buộc phải đọc file này trước khi viết bất kỳ CSS hoặc HTML nào.
 
 ## 3. Quy tắc Lập trình (AI Rule)
 - Đọc file `USER_GUIDE.md` nếu User gặp khó khăn trong việc chạy code.
@@ -24,6 +25,7 @@ Quy tắc tối thượng: Giữ mọi thứ đơn giản, tốc độ cao, modu
 - Khi làm việc với Supabase: Luôn import từ `src/lib/supabase.js`.
 - Khi cần tạo Component: Định nghĩa nó trong `src/components/` và export ra.
 - Nếu không chắc về ý định của User, hãy hỏi thay vì tự ý cài thêm packages.
+- **KHI THIẾT KẾ UI**: Bắt buộc đọc `skills/taste-skill/SKILL.md` trước khi viết CSS/HTML. Tuân thủ 3 thông số DESIGN_VARIANCE, MOTION_INTENSITY, VISUAL_DENSITY. Không bao giờ tạo giao diện "generic slop".
 
 ## 4. Quy trình Quản lý Task với Beads (Tối ưu Token)
 
