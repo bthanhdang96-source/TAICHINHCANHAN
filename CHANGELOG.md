@@ -5,7 +5,16 @@ Mỗi khi có tính năng mới hoặc lỗi được sửa, AI (hoặc bạn) s
 
 ---
 
-## [2026-04-24] - Thêm Taste Skill (Design System)
+## [2026-04-24] - Dashboard Quan ly Tai chinh
+- Xay dung trang dashboard hoan chinh voi 5 loai tai san: Tien mat, Trai phieu, Co phieu, Vang, Crypto.
+- Bieu do Donut hien thi ty trong tu dong.
+- Bieu do xu huong (Trend) co 3 tab: 1 thang / 3 thang / 1 nam.
+- Sparkline cho tung loai tai san.
+- Nut An/Hien so du cho tung tai san va toan bo.
+- Thong ke noi bat: Loi nhuan, Ty suat, Tai san tang/giam manh nhat.
+- Thiet ke theo quy tac Taste Skill: Font Outfit + JetBrains Mono, palette Zinc + Emerald, asymmetric grid.
+
+## [2026-04-24] - Them Taste Skill (Design System)
 - Tích hợp bộ quy tắc thiết kế UI premium từ [taste-skill](https://github.com/Leonxlnx/taste-skill).
 - AI sẽ tự động tuân theo các quy tắc chống giao diện "nhạt nhẽo" (anti-slop): cấm font Inter, cấm emoji, cấm layout generic 3 cột đều nhau.
 - Có 3 thông số điều chỉnh phong cách: DESIGN_VARIANCE (bố cục), MOTION_INTENSITY (hiệu ứng), VISUAL_DENSITY (mật độ nội dung).
