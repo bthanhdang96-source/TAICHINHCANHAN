@@ -24,5 +24,28 @@ Quy tắc tối thượng: Giữ mọi thứ đơn giản, tốc độ cao, modu
 - Khi làm việc với Supabase: Luôn import từ `src/lib/supabase.js`.
 - Khi cần tạo Component: Định nghĩa nó trong `src/components/` và export ra.
 - Nếu không chắc về ý định của User, hãy hỏi thay vì tự ý cài thêm packages.
-- **BẮT BUỘC TRƯỚC KHI KẾT THÚC CÔNG VIỆC**: Phải cập nhật log vào `CHANGELOG.md` (cho Human) và `AI_MEMORY.md` (cho AI). Sau đó, chạy lệnh `sync.bat` (hoặc các lệnh git add/commit/push) để tự động đẩy code lên GitHub.
-- **BẮT BUỘC TRƯỚC KHI BẮT ĐẦU CÔNG VIỆC**: Phải đọc `AI_MEMORY.md` để lấy bối cảnh kỹ thuật hiện hành.
+
+## 4. Quy trình Quản lý Task với Beads (Tối ưu Token)
+
+Dự án sử dụng **Beads (`bd` CLI)** để quản lý task và bộ nhớ AI. Đây là quy trình bắt buộc:
+
+### BẮT ĐẦU CÔNG VIỆC:
+```bash
+bd prime              # Lấy bối cảnh nén (~1-2k tokens) — thay thế việc đọc file log dài
+bd ready              # Xem task nào sẵn sàng để làm (không bị chặn bởi task khác)
+bd show <id>          # Xem chi tiết task cụ thể
+bd update <id> --claim # Nhận task về mình
+```
+
+### TRONG KHI CODE:
+- Dùng `bd create "Tiêu đề" -p <priority> -t task` để tạo sub-task nếu cần.
+- Dùng `bd update <id> --notes "ghi chú"` để lưu lại ghi chú kỹ thuật.
+- Dùng `bd remember "thông tin quan trọng"` để lưu kiến thức vĩnh viễn.
+
+### KẾT THÚC CÔNG VIỆC:
+1. Đóng task đã hoàn thành: `bd close <id> "Lý do"`.
+2. Cập nhật `CHANGELOG.md` (cho Human đọc).
+3. Chạy lệnh push code:
+```bash
+git add .; git commit -m "mô tả"; git push origin main
+```

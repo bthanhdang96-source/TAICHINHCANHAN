@@ -1,0 +1,15 @@
+
+# Dependencies
+node_modules/
+
+# Environment (chứa secret keys)
+.env
+
+# Build output
+dist/
+
+# Beads / Dolt files (added by bd init)
+.beads/
+.dolt/
+*.db
+.beads-credential-key

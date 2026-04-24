@@ -42,3 +42,21 @@ Lệnh này sẽ nén toàn bộ code của bạn thành một thư mục `dist`
 npm run build
 ```
 *(Dự án này đã được cấu hình sẵn cho Render.com. Nếu bạn kết nối Github với Render, việc build sẽ được Render tự động làm mỗi khi bạn Push code lên).*
+
+## 4. Xem Danh sách Task (Beads)
+Dự án sử dụng **Beads** để quản lý công việc. Bạn có thể xem task nào đang chờ xử lý bằng lệnh:
+```bash
+bd ready        # Xem các task sẵn sàng để làm
+bd list         # Xem toàn bộ danh sách task
+bd show <id>    # Xem chi tiết một task (ví dụ: bd show bd-a1b2)
+```
+
+## 5. Đẩy code lên GitHub nhanh
+Bạn có 2 cách:
+- **Cách 1:** Click đúp vào file `sync.bat` trong thư mục dự án.
+- **Cách 2:** Mở Terminal và chạy:
+```bash
+git add .
+git commit -m "mô tả thay đổi"
+git push origin main
+```
