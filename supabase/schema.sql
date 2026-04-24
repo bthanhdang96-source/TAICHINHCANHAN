@@ -1,0 +1,22 @@
+-- ĐÂY LÀ FILE LƯU TRỮ CẤU TRÚC DATABASE ĐỂ AI THAM KHẢO
+-- User có thể chạy các lệnh này trong SQL Editor của Supabase để khởi tạo bảng.
+
+-- Ví dụ tạo bảng user_profiles
+-- CREATE TABLE user_profiles (
+--   id UUID REFERENCES auth.users NOT NULL PRIMARY KEY,
+--   full_name TEXT,
+--   avatar_url TEXT,
+--   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+-- );
+
+-- Bảng lưu trữ giao dịch tài chính (ví dụ cho ứng dụng Tài chính cá nhân)
+-- CREATE TABLE transactions (
+--   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+--   user_id UUID REFERENCES auth.users NOT NULL,
+--   amount DECIMAL(12, 2) NOT NULL,
+--   type TEXT CHECK (type IN ('income', 'expense')) NOT NULL,
+--   category TEXT NOT NULL,
+--   description TEXT,
+--   date DATE NOT NULL,
+--   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+-- );
