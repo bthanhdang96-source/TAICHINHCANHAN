@@ -201,7 +201,12 @@ function renderTransactionPanel() {
   if (vpbankTransactions.length === 0) {
     return `
       <div class="transaction-panel">
-        <div class="transaction-panel__title">Giao dich VPBank gan day</div>
+        <div class="transaction-panel__title">
+          <span>Giao dich VPBank gan day</span>
+          <button class="btn-toggle" style="font-size:0.75rem; padding:0.25rem 0.75rem; border-radius:1rem; border:1px solid var(--border-default); background:var(--bg-surface-hover);" title="Tai lai" id="btn-refresh-sepay">
+            Lay du lieu moi
+          </button>
+        </div>
         <div class="transaction-empty">Khong co giao dich nao gan day.</div>
       </div>
     `;
@@ -211,8 +216,8 @@ function renderTransactionPanel() {
     <div class="transaction-panel">
       <div class="transaction-panel__title">
         <span>Giao dich VPBank gan day</span>
-        <button class="btn-toggle" style="border:none;background:transparent" title="Tai lai" id="btn-refresh-sepay">
-          ↻
+        <button class="btn-toggle" style="font-size:0.75rem; padding:0.25rem 0.75rem; border-radius:1rem; border:1px solid var(--border-default); background:var(--bg-surface-hover);" title="Tai lai" id="btn-refresh-sepay">
+          Lay du lieu moi
         </button>
       </div>
       <div class="transaction-list">
