@@ -423,10 +423,13 @@ async function loadSepayData() {
 }
 
 async function loadTCBSData() {
+  const otp = window.prompt("Hệ thống TCBS yêu cầu xác thực bảo mật.\nVui lòng mở app TCInvest (SmartOTP) và nhập 6 số iOTP vào đây:");
+  if (!otp) return; // Nguoi dung an Cancel
+  
   isLoadingTcbs = true;
   render(); // show loading state
 
-  const tcbsResult = await fetchTCBSAssets();
+  const tcbsResult = await fetchTCBSAssets(otp);
   tcbsAssets = tcbsResult.items || [];
   tcbsTotalValue = tcbsResult.totalValue || 0;
 

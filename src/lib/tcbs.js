@@ -22,7 +22,7 @@ function getConfig() {
  * Fetch JWT Token from TCBS (if needed) or use API Key directly.
  * Thuc te, TCBS yeu cau call /gaia/v1/oauth2/openapi/token de doi API Key lay JWT Token.
  */
-async function getValidToken(apiKey) {
+async function getValidToken(apiKey, otp) {
   // Neu apiKey da la JWT token (thuong bat dau bang ey), tra ve luon
   if (apiKey.startsWith('ey')) {
     return apiKey;
@@ -35,7 +35,7 @@ async function getValidToken(apiKey) {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ apiKey }) // Payload co the phai doi tuy theo TCBS
+      body: JSON.stringify({ apiKey, otp }) // Payload theo chuan cua TCBS
     });
     if (res.ok) {
       const data = await res.json();
@@ -55,11 +55,11 @@ async function getValidToken(apiKey) {
  * Fetch TCBS Stock Assets (Tra cuu tai san co phieu)
  * @returns {Promise<{totalValue: number, items: Array}>}
  */
-export async function fetchTCBSAssets() {
+export async function fetchTCBSAssets(otp) {
   const { apiKey, accountNo } = getConfig();
   if (!apiKey || !accountNo) return { totalValue: 0, items: [] };
 
-  const token = await getValidToken(apiKey);
+  const token = await getValidToken(apiKey, otp);
 
   try {
     const response = await fetch(`${TCBS_API_URL}/aion/v1/accounts/${accountNo}/se`, {
