@@ -67,17 +67,81 @@ function stringifyPayload(payload) {
   }
 }
 
-function joinMessageParts(parts) {
-  return parts.filter(Boolean).join(' ');
+function toMultiline(parts) {
+  return parts.filter(Boolean).join('\n');
 }
 
-function createTCBSError(step, response, payload, fallbackMessage) {
+function maskValue(value, visibleStart = 4, visibleEnd = 4) {
+  if (!value) return '(trong)';
+  if (value.length <= visibleStart + visibleEnd) return '*'.repeat(value.length);
+
+  return `${value.slice(0, visibleStart)}...${value.slice(-visibleEnd)}`;
+}
+
+function detectApiKeyType(apiKey) {
+  if (!apiKey) return 'missing';
+  if (apiKey.startsWith('ey')) return 'jwt_like';
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(apiKey)) {
+    return 'uuid_like';
+  }
+
+  return 'opaque';
+}
+
+function pickResponseHeaders(response) {
+  if (!response?.headers) return [];
+
+  const interestingHeaders = [
+    'content-type',
+    'content-length',
+    'date',
+    'server',
+    'via',
+    'x-request-id',
+    'x-correlation-id',
+    'x-amzn-requestid',
+    'cf-ray'
+  ];
+
+  return interestingHeaders
+    .map((name) => {
+      const value = response.headers.get(name);
+      return value ? `${name}=${value}` : '';
+    })
+    .filter(Boolean);
+}
+
+function buildContextLines(context = {}) {
+  const lines = [];
+
+  if (context.endpoint) lines.push(`Endpoint: ${context.endpoint}`);
+  if (context.accountNo) lines.push(`Tieu khoan: ${maskValue(context.accountNo, 0, 4)} (len ${context.accountNo.length})`);
+  if (context.apiKey) {
+    lines.push(
+      `API Key: ${detectApiKeyType(context.apiKey)}, len ${context.apiKey.length}, masked ${maskValue(context.apiKey)}`
+    );
+  }
+  if (context.otp) {
+    lines.push(`OTP: ${'*'.repeat(context.otp.length)} (len ${context.otp.length})`);
+  }
+  if (context.responseHeaders?.length) {
+    lines.push(`Response headers: ${context.responseHeaders.join(' | ')}`);
+  }
+
+  return lines;
+}
+
+function createTCBSError(step, response, payload, fallbackMessage, context = {}) {
   const error = new Error(fallbackMessage);
   error.name = 'TCBSError';
   error.step = step;
   error.status = response?.status ?? null;
   error.payload = payload;
   error.details = buildErrorDetails(payload);
+  error.context = {
+    ...context,
+    responseHeaders: pickResponseHeaders(response)
+  };
   return error;
 }
 
@@ -91,21 +155,29 @@ function getUserFacingError(error) {
   const rawPayloadText = !detailsText && error.payload
     ? `Payload: ${stringifyPayload(error.payload)}.`
     : '';
+  const contextLines = buildContextLines(error.context);
+  const bodyHint = !detailsText && !rawPayloadText
+    ? 'Response body: rong hoac khong co truong message de hien thi.'
+    : '';
 
   if (error.step === 'token_exchange') {
-    return joinMessageParts([
+    return toMultiline([
       'TCBS tu choi doi token.',
       statusText,
       detailsText || rawPayloadText,
+      bodyHint,
+      ...contextLines,
       'Kiem tra lai API Key trong .env, OTP vua nhap, va dam bao API Key nay da duoc kich hoat Open API trong TCInvest.'
     ]);
   }
 
   if (error.step === 'asset_fetch') {
-    return joinMessageParts([
+    return toMultiline([
       'Da lay token nhung TCBS tu choi truy van tai san.',
       statusText,
       detailsText || rawPayloadText,
+      bodyHint,
+      ...contextLines,
       'Kiem tra lai tieu khoan trong .env co khop voi API Key va quyen truy cap hay khong.'
     ]);
   }
@@ -127,6 +199,12 @@ async function getValidToken(apiKey, otp) {
     throw new Error('OTP la bat buoc de doi TCBS access token.');
   }
 
+  const requestContext = {
+    endpoint: 'POST /gaia/v1/oauth2/openapi/token',
+    apiKey,
+    otp: sanitizedOtp
+  };
+
   const response = await fetch(`${TCBS_API_URL}/gaia/v1/oauth2/openapi/token`, {
     method: 'POST',
     headers: {
@@ -141,7 +219,8 @@ async function getValidToken(apiKey, otp) {
       'token_exchange',
       response,
       payload,
-      `Khong the doi TCBS token (${response.status}).`
+      `Khong the doi TCBS token (${response.status}).`,
+      requestContext
     );
   }
 
@@ -153,7 +232,8 @@ async function getValidToken(apiKey, otp) {
     'token_exchange',
     response,
     payload,
-    'TCBS khong tra ve access token hop le.'
+    'TCBS khong tra ve access token hop le.',
+    requestContext
   );
 }
 
@@ -186,7 +266,12 @@ export async function fetchTCBSAssets(otp) {
         'asset_fetch',
         response,
         json,
-        `Khong the lay tai san TCBS (${response.status}).`
+        `Khong the lay tai san TCBS (${response.status}).`,
+        {
+          endpoint: `GET /aion/v1/accounts/${accountNo}/se`,
+          accountNo,
+          apiKey
+        }
       );
     }
 

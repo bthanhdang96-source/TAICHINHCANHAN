@@ -25,6 +25,15 @@ function formatVND(n) {
   return new Intl.NumberFormat('vi-VN').format(n);
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 function getTotalValue() {
   return ASSETS.reduce((sum, a) => sum + a.value, 0);
 }
@@ -274,7 +283,7 @@ function renderTCBSPanel() {
       </div>
       
       ${tcbsError ? `
-        <div class="panel-error">${tcbsError}</div>
+        <div class="panel-error">${escapeHtml(tcbsError)}</div>
       ` : tcbsAssets.length === 0 ? `
         <div class="transaction-empty">Chua co du lieu hoac ban khong cam ma co phieu nao.</div>
       ` : `
