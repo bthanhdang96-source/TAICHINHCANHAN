@@ -3,7 +3,7 @@
  * Connects to SePay v2 API to fetch real bank account balances and transactions.
  */
 
-const SEPAY_API_URL = 'https://userapi.sepay.vn/v2';
+const SEPAY_API_URL = '/api/sepay';
 
 /**
  * Get the SePay API Token from environment variables.
