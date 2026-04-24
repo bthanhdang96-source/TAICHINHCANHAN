@@ -6,11 +6,14 @@ import './style.css';
 import { icons } from './lib/icons.js';
 import { drawDonut, drawSparkline, drawTrendChart } from './lib/charts.js';
 import { ASSETS, TREND_DATA, STATS } from './data/demo.js';
+import { fetchVPBankAccountBalance, fetchVPBankTransactions } from './lib/sepay.js';
 
 // --- State ---
 const hiddenAssets = new Set();
 let allHidden = false;
 let activeTrendTab = '1M';
+let vpbankTransactions = [];
+let isLoadingSepay = true;
 
 // --- Helpers ---
 function formatVND(n) {
@@ -182,6 +185,62 @@ function renderStatsPanel() {
   `;
 }
 
+function renderTransactionPanel() {
+  if (isLoadingSepay) {
+    return `
+      <div class="transaction-panel">
+        <div class="transaction-panel__title">Giao dich VPBank gan day</div>
+        <div class="transaction-empty">
+          <div class="spinner"></div>
+          <div style="margin-top: 1rem;">Dang dong bo du lieu SePay...</div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (vpbankTransactions.length === 0) {
+    return `
+      <div class="transaction-panel">
+        <div class="transaction-panel__title">Giao dich VPBank gan day</div>
+        <div class="transaction-empty">Khong co giao dich nao gan day.</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="transaction-panel">
+      <div class="transaction-panel__title">
+        <span>Giao dich VPBank gan day</span>
+        <button class="btn-toggle" style="border:none;background:transparent" title="Tai lai" id="btn-refresh-sepay">
+          ↻
+        </button>
+      </div>
+      <div class="transaction-list">
+        ${vpbankTransactions.map(tx => {
+          const isIn = tx.transfer_type === 'in';
+          const icon = isIn ? '+' : '-';
+          const amount = isIn ? tx.amount_in : tx.amount_out;
+          
+          return `
+            <div class="transaction-item">
+              <div class="transaction-item__icon transaction-item__icon--${isIn ? 'in' : 'out'}">
+                ${icon}
+              </div>
+              <div class="transaction-item__details">
+                <div class="transaction-item__content">${tx.transaction_content || 'Giao dich qua VPBank'}</div>
+                <div class="transaction-item__date">${tx.transaction_date}</div>
+              </div>
+              <div class="transaction-item__amount transaction-item__amount--${isIn ? 'in' : 'out'}">
+                ${isIn ? '+' : '-'}${formatVND(amount)}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
 function now() {
   return new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 }
@@ -207,6 +266,8 @@ function render() {
         ${renderTrendSection()}
         ${renderStatsPanel()}
       </section>
+
+      ${renderTransactionPanel()}
     </div>
   `;
 
@@ -270,6 +331,11 @@ function bindEvents() {
       render();
     });
   });
+
+  // Refresh SePay
+  document.getElementById('btn-refresh-sepay')?.addEventListener('click', () => {
+    loadSepayData();
+  });
 }
 
 // --- Resize handler ---
@@ -280,4 +346,22 @@ window.addEventListener('resize', () => {
 });
 
 // --- Init ---
-render();
+async function loadSepayData() {
+  isLoadingSepay = true;
+  render(); // show loading state
+  
+  const balance = await fetchVPBankAccountBalance();
+  if (balance !== null) {
+    const bankAsset = ASSETS.find(a => a.id === 'bank');
+    if (bankAsset) {
+      bankAsset.value = balance;
+    }
+  }
+  
+  vpbankTransactions = await fetchVPBankTransactions(5);
+  isLoadingSepay = false;
+  render();
+}
+
+render(); // initial render with demo data
+loadSepayData(); // fetch real data

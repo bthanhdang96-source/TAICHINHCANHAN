@@ -659,6 +659,124 @@ body {
   .asset-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* --- Recent Transactions Panel --- */
+.transaction-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  animation: fadeSlideUp 0.5s var(--ease-spring) 0.5s both;
+  grid-column: 1 / -1;
+  margin-top: -1rem;
+}
+
+.transaction-panel__title {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.transaction-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.transaction-item {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  transition: background var(--duration-fast) var(--ease-spring);
+}
+
+.transaction-item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.transaction-item__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.transaction-item__icon--in {
+  background: var(--positive-bg);
+  color: var(--positive);
+}
+
+.transaction-item__icon--out {
+  background: var(--negative-bg);
+  color: var(--negative);
+}
+
+.transaction-item__details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.transaction-item__content {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.transaction-item__date {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.transaction-item__amount {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.transaction-item__amount--in {
+  color: var(--positive);
+}
+
+.transaction-item__amount--out {
+  color: var(--negative);
+}
+
+.transaction-empty {
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-default);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
   .topbar {
     flex-direction: column;
